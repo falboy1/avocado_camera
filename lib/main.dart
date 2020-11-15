@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -18,12 +19,21 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: CameraWidget(),
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            "Avocado",
+            style: TextStyle(color: Colors.black),
+          ),
+          backgroundColor: Colors.white,
+        ),
+        body: CameraWidget(),
+      ),
     );
   }
 }
 
-//カメラ
+// プレビューと撮影ボタンを持つウィジェット
 class CameraWidget extends StatefulWidget {
   @override
   _CameraWidgetState createState() {
@@ -52,21 +62,47 @@ class _CameraWidgetState extends State<CameraWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("test")),
-      // FutureBuilderでカメラ初期化完了までプログレスバーを表示
-      body: FutureBuilder<void>(
-        future: _initializeControllerFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return CameraPreview(_controller);
-          } else {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        },
-      ),
+    // プレビューのwidgetかプログレスバーのwidgetが返る
+    return Column(
+      children: [
+        Expanded(
+          child: FutureBuilder<void>(
+            future: _initializeControllerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return CameraPreview(_controller);
+              } else {
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+            },
+          ),
+        ),
+        Container(
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                RaisedButton(
+                  child: const Text(''),
+                  color: Colors.white,
+                  shape: const CircleBorder(
+                    side: BorderSide(
+                      color: Colors.black,
+                      width: 3,
+                      style: BorderStyle.solid,
+                    ),
+                  ),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
