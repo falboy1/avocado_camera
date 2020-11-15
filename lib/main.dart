@@ -32,35 +32,41 @@ class CameraWidget extends StatefulWidget {
 }
 
 class _CameraWidgetState extends State<CameraWidget> {
-  CameraController controller; // CameraController：Flutterのcamera扱うクラス
+  CameraController _controller; // CameraController：Flutterのcamera扱うクラス
+  Future<void> _initializeControllerFuture;
 
   @override
   void initState() {
     super.initState();
     // カメラリストからカメラと画質を指定して初期化 (番号と画質の指定)
-    controller = CameraController(cameras[0], ResolutionPreset.medium);
-    controller.initialize().then((_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {}); // 画面を反映させる
-    });
+    _controller = CameraController(cameras[0], ResolutionPreset.medium);
+    _initializeControllerFuture = _controller.initialize();
   }
 
   @override
   void dispose() {
     // stateの解放
-    controller?.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!controller.value.isInitialized) {
-      return Container();
-    }
-    return AspectRatio(
-        aspectRatio: controller.value.aspectRatio,
-        child: CameraPreview(controller));
+    return Scaffold(
+      appBar: AppBar(title: Text("test")),
+      // FutureBuilderでカメラ初期化完了までプログレスバーを表示
+      body: FutureBuilder<void>(
+        future: _initializeControllerFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return CameraPreview(_controller);
+          } else {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
+      ),
+    );
   }
 }
