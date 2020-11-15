@@ -1,22 +1,37 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:path_provider/path_provider.dart';
 
-// カメラ情報リスト
+// 使用可能カメラのリスト
 List<CameraDescription> cameras;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras(); // 非同期処理 カメラ起動
-  runApp(CameraApp());
+  runApp(MyApp());
 }
 
-class CameraApp extends StatefulWidget {
+// アプリ全体
+class MyApp extends StatelessWidget {
   @override
-  _CameraAppState createState() => _CameraAppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: CameraWidget(),
+    );
+  }
 }
 
-class _CameraAppState extends State<CameraApp> {
+//カメラ
+class CameraWidget extends StatefulWidget {
+  @override
+  _CameraWidgetState createState() {
+    return _CameraWidgetState();
+  }
+}
+
+class _CameraWidgetState extends State<CameraWidget> {
   CameraController controller; // CameraController：Flutterのcamera扱うクラス
 
   @override
