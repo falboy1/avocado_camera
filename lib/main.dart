@@ -3,10 +3,17 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 // 使用可能カメラのリスト
 List<CameraDescription> cameras;
+
+// 色情報
+final myMainColor = Colors.green;
+final myAccentColor = Colors.deepPurpleAccent;
+final avocadoSeedColor = Colors.brown;
+final avocadoFleshColor = Colors.yellow;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,13 +28,22 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text(
-            "Avocado",
-            style: TextStyle(color: Colors.black),
+          leading: IconButton(
+            icon: Icon(Icons.more_horiz_outlined),
+            onPressed: () {},
           ),
-          backgroundColor: Colors.white,
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.history),
+              onPressed: () {},
+            ),
+          ],
         ),
         body: CameraWidget(),
+      ),
+      theme: ThemeData(
+        primaryColor: myMainColor,
+        accentColor: myAccentColor,
       ),
     );
   }
@@ -80,23 +96,39 @@ class _CameraWidgetState extends State<CameraWidget> {
           ),
         ),
         Container(
-          color: Colors.white,
+          color: myMainColor,
           child: Padding(
             padding: const EdgeInsets.all(10.0),
+            // Rowでボタンを中央に寄せて配置
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 RaisedButton(
                   child: const Text(''),
-                  color: Colors.white,
+                  color: avocadoSeedColor,
                   shape: const CircleBorder(
                     side: BorderSide(
-                      color: Colors.black,
+                      color: Colors.amber,
                       width: 3,
                       style: BorderStyle.solid,
                     ),
                   ),
-                  onPressed: () {},
+                  // ボタン押下時の動作：画像の撮影と保存を行う
+                  onPressed: () async {
+                    try {
+                      // 念のため非同期処理をかける
+                      await _initializeControllerFuture;
+                      // 現在時刻でファイルパスを取得
+                      final path = join(
+                        (await getApplicationDocumentsDirectory()).path,
+                        '${DateTime.now()}.png',
+                      );
+                      // 画像を保存
+                      await _controller.takePicture(path);
+                    } catch (e) {
+                      print(e);
+                    }
+                  },
                 ),
               ],
             ),
