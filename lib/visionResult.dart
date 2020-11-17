@@ -1,20 +1,14 @@
 import 'dart:io';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 
-const data = [
-  'abc',
-  'def',
-  'ghi',
-];
-
-class DisplayPictureScreen extends StatelessWidget {
-  final String imagePath;
-
-  const DisplayPictureScreen({Key key, this.imagePath}) : super(key: key);
+// モデルの適用結果を映すウィジェット
+// Scaffoldを持つページが作成される
+class ResultPage extends StatelessWidget {
+  // cameraPreview.dartから受け取る値
+  final String imagePath; // 撮影された画像のパス
+  const ResultPage({Key key, this.imagePath}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +29,8 @@ class DisplayPictureScreen extends StatelessWidget {
 }
 
 class VisionResult extends StatefulWidget {
-  final String path; // mainから撮影時に取得
+  // 親ウィジェットから受け取る値
+  final String path; // 画像パス
   VisionResult({this.path});
 
   @override
@@ -47,7 +42,7 @@ class VisionResult extends StatefulWidget {
 class _VisionResultState extends State<VisionResult> {
   @override
   Widget build(BuildContext context) {
-    // ビルダーでリストwidgetを返す
+    // 非同期でウィジェットを返す.　完了：結果のListView, 待機: テキスト
     return FutureBuilder(
       future: predictImage(),
       builder: (context, snapshot) {
@@ -67,6 +62,7 @@ class _VisionResultState extends State<VisionResult> {
     );
   }
 
+  // ML kitのモデルを適用するメソッド
   Future<List<ImageLabel>> predictImage() async {
     var file = File(widget.path);
     final FirebaseVisionImage visionImage = FirebaseVisionImage.fromFile(file);
