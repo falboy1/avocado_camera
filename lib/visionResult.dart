@@ -28,6 +28,7 @@ class ResultPage extends StatelessWidget {
   }
 }
 
+// 結果表示部分のウィジェット
 class VisionResult extends StatefulWidget {
   // 親ウィジェットから受け取る値
   final String path; // 画像パス
