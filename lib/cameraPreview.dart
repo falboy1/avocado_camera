@@ -49,6 +49,7 @@ class _CameraWidgetState extends State<CameraWidget> {
         Container(
           height: 5,
         ),
+        // 画像のプレビュー: 正方形にクロップされる
         FutureBuilder<void>(
           future: _initializeControllerFuture,
           builder: (context, snapshot) {
@@ -81,7 +82,7 @@ class _CameraWidgetState extends State<CameraWidget> {
             }
           },
         ),
-        // ボタン部分.
+        // ボタン部分 : Rowでアイコンが並ぶ
         Padding(
           padding: const EdgeInsets.all(30.0),
           // Rowでボタンを中央に寄せて配置

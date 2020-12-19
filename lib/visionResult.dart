@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -18,17 +19,7 @@ class ResultPage extends StatelessWidget {
     final double deviceHeight = MediaQuery.of(context).size.height; // 端末の高さ
     return Scaffold(
       appBar: AppBar(title: Text('Result')),
-      body: Column(
-        children: [
-          Expanded(
-            child: Image.file(File(imagePath)),
-          ),
-          FittedBox(
-            fit: BoxFit.none,
-            child: VisionResult(imgPath: imagePath),
-          ),
-        ],
-      ),
+      body: VisionResult(imgPath: imagePath),
     );
   }
 }
@@ -46,25 +37,49 @@ class VisionResult extends StatefulWidget {
 }
 
 class _VisionResultState extends State<VisionResult> {
+  imgLib.Image _croppedImage; // クロップされた画像
+
+  // ウィジェットの作成時に撮影された画像をクロップ
+  @override
+  void initState() {
+    super.initState();
+    // imgLib.image型に画像を変換
+    imgLib.Image image =
+        imgLib.decodeImage(File(widget.imgPath).readAsBytesSync());
+    // 画像をセンタークロップ
+    _croppedImage = cropSquare(image);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // 非同期でウィジェットを返す.　完了：結果のListView, 待機: テキスト
-    return FutureBuilder(
-      future: predictImage(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return ListView.builder(
-            itemCount: snapshot.data.length,
-            itemBuilder: (context, index) {
-              return Text(snapshot.data[index].text +
-                  '：' +
-                  '${snapshot.data[index].confidence}');
-            },
-          );
-        } else {
-          return Text("読み込み中？");
-        }
-      },
+    // クロップされた画像と結果
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        // 分類に使用された画像
+        Image.memory(
+          imgLib.encodeJpg(_croppedImage),
+        ),
+        // 非同期でウィジェットを返す.　完了：結果のListView, 待機: テキスト
+        FutureBuilder(
+          future: predictImage(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: snapshot.data.length,
+                itemBuilder: (context, index) {
+                  return Text(snapshot.data[index]["label"] +
+                      ':' +
+                      snapshot.data[index]["confidence"].toString());
+                },
+              );
+            } else {
+              return Text("読み込み中？");
+            }
+          },
+        ),
+      ],
     );
   }
 
@@ -72,19 +87,16 @@ class _VisionResultState extends State<VisionResult> {
   Future<String> loadModel() async {
     Tflite.close();
     return Tflite.loadModel(
-      model: '',
-      labels: '',
+      model: 'assets/converted_model.tflite',
+      labels: 'assets/labels.txt',
     );
   }
 
   // TfLiteモデルで画像の分類
   Future<dynamic> predictImage() async {
     await loadModel();
-    // imgLib.image型に画像を変換
-    imgLib.Image image =
-        imgLib.decodeImage(File(widget.imgPath).readAsBytesSync());
-    // 画像をバイナリ形式に変換
-    Uint8List binaryImage = imageToByteListFloat32(image, 224, 224);
+    // クロップ済み画像を224×224のバイナリ形式に変換
+    Uint8List binaryImage = imageToByteListFloat32(_croppedImage, 224, 224);
     // 分類結果を取得
     dynamic output = await Tflite.runModelOnBinary(
       binary: binaryImage,
@@ -94,7 +106,7 @@ class _VisionResultState extends State<VisionResult> {
     return output;
   }
 
-  // imgLib.imageをバイナリに変換する関数
+  // imgLib.imageをバイナリに変換する関数: TfLite推論のために使用
   Uint8List imageToByteListFloat32(imgLib.Image image, int width, int height) {
     // リサイズと複製
     imgLib.Image resizeImage =
@@ -112,5 +124,21 @@ class _VisionResultState extends State<VisionResult> {
       }
     }
     return convertedBytes.buffer.asUint8List();
+  }
+
+  // 画像を正方形にセンタークロップ
+  imgLib.Image cropSquare(imgLib.Image image) {
+    var cropSize = min(image.width, image.height); // 幅と高さで小さいほうをクロップサイズとする
+    int offsetX = (image.width - cropSize) ~/ 2;
+    int offsetY = (image.height - cropSize) ~/ 2;
+    // 画像をクロップ
+    imgLib.Image croppedImage =
+        imgLib.copyCrop(image, offsetX, offsetY, cropSize, cropSize);
+
+    setState(() {
+      _croppedImage = croppedImage;
+    });
+
+    return croppedImage;
   }
 }
