@@ -8,12 +8,18 @@ class Header extends StatelessWidget with PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      backgroundColor: Colors.white,
       leading: IconButton(
-        icon: Icon(Icons.more_horiz_outlined),
+        color: Colors.black54,
+        icon: Icon(
+          Icons.more_horiz_rounded,
+          color: Colors.black54,
+        ),
         onPressed: () {},
       ),
       actions: <Widget>[
         IconButton(
+          color: Colors.black54,
           icon: Icon(Icons.history),
           onPressed: () {},
         ),

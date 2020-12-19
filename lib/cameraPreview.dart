@@ -10,8 +10,7 @@ import 'package:avocado_camera/visionResult.dart';
 class CameraWidget extends StatefulWidget {
   // mainから受け取る値
   final List<CameraDescription> cameras; // カメラリスト
-  final Map<String, dynamic> myColors; // 基本色: ボタンの色等に使用
-  CameraWidget({this.cameras, this.myColors});
+  CameraWidget({this.cameras});
 
   @override
   _CameraWidgetState createState() {
@@ -27,7 +26,8 @@ class _CameraWidgetState extends State<CameraWidget> {
   void initState() {
     super.initState();
     // カメラリストからカメラと画質を指定して初期化 (番号と画質の指定)
-    _controller = CameraController(widget.cameras[0], ResolutionPreset.medium);
+    _controller =
+        CameraController(widget.cameras[0], ResolutionPreset.veryHigh);
     _initializeControllerFuture = _controller.initialize();
   }
 
@@ -40,40 +40,81 @@ class _CameraWidgetState extends State<CameraWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size.width; // 端末の幅
     // カメラプレビューと撮影ボタンをColumnで配置
     return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(
-          // 非同期でウィジェットを返す. 完了: カメラプレビュー, 待機: プログレス
-          child: FutureBuilder<void>(
-            future: _initializeControllerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return CameraPreview(_controller);
-              } else {
-                return Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-            },
-          ),
+        // ダミーWidget: 画像を上下中央に寄せるため
+        Container(
+          height: 5,
+        ),
+        FutureBuilder<void>(
+          future: _initializeControllerFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return (Transform.scale(
+                scale: 1.0,
+                child: AspectRatio(
+                  aspectRatio: 1.0 / 1.0,
+                  child: OverflowBox(
+                    alignment: Alignment.center,
+                    child: FittedBox(
+                      fit: BoxFit.fitWidth,
+                      child: Container(
+                        width: size,
+                        height: size / _controller.value.aspectRatio,
+                        child: Stack(
+                          children: <Widget>[
+                            CameraPreview(_controller),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ));
+            } else {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          },
         ),
         // ボタン部分.
-        Container(
-          color: widget.myColors['mainColor'],
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            // Rowでボタンを中央に寄せて配置
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                RaisedButton(
+        Padding(
+          padding: const EdgeInsets.all(30.0),
+          // Rowでボタンを中央に寄せて配置
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              FittedBox(
+                child: FlatButton(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.menu_book,
+                        color: Colors.black54,
+                      ),
+                      Text(
+                        "recipe",
+                        style: TextStyle(color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                  onPressed: () {},
+                ),
+              ),
+              SizedBox(
+                width: 60.0,
+                height: 60.0,
+                child: RaisedButton(
                   child: Text(''),
-                  color: widget.myColors['avocadoSeedColor'],
+                  color: Colors.white,
                   shape: CircleBorder(
                     side: BorderSide(
-                      color: widget.myColors['avocadoFleshColor'],
-                      width: 3,
+                      color: Colors.black54,
+                      width: 5,
                       style: BorderStyle.solid,
                     ),
                   ),
@@ -101,8 +142,25 @@ class _CameraWidgetState extends State<CameraWidget> {
                     }
                   },
                 ),
-              ],
-            ),
+              ),
+              FittedBox(
+                child: FlatButton(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.collections_outlined,
+                        color: Colors.black54,
+                      ),
+                      Text(
+                        "album",
+                        style: TextStyle(color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                  onPressed: () {},
+                ),
+              ),
+            ],
           ),
         ),
       ],
