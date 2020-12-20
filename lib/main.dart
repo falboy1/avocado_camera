@@ -19,7 +19,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        // header.dart
         appBar: Header(),
+        // cameraPreview.dart
         body: CameraWidget(
           cameras: cameras,
         ),

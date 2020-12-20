@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:avocado_camera/visionResult.dart';
@@ -20,7 +21,8 @@ class CameraWidget extends StatefulWidget {
 
 class _CameraWidgetState extends State<CameraWidget> {
   CameraController _controller; // CameraController：Flutterのcamera扱うクラス
-  Future<void> _initializeControllerFuture;
+  ImagePicker picker;
+  Future<void> _initializeControllerFuture; // 初期化の終了を非同期で監視
 
   @override
   void initState() {
@@ -29,6 +31,8 @@ class _CameraWidgetState extends State<CameraWidget> {
     _controller =
         CameraController(widget.cameras[0], ResolutionPreset.veryHigh);
     _initializeControllerFuture = _controller.initialize();
+    // ImagePickerの初期化
+    picker = ImagePicker();
   }
 
   @override
@@ -131,7 +135,7 @@ class _CameraWidgetState extends State<CameraWidget> {
                       );
                       // 画像を保存
                       await _controller.takePicture(path);
-                      // 画面遷移
+                      // ResultPageに画面遷移: 引数->画像パス
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -158,7 +162,19 @@ class _CameraWidgetState extends State<CameraWidget> {
                       ),
                     ],
                   ),
-                  onPressed: () {},
+                  onPressed: () async {
+                    // アルバムから画像を選択させる
+                    final pickedFile =
+                        await picker.getImage(source: ImageSource.gallery);
+                    // ResultPageに画面遷移: 引数->画像パス
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ResultPage(imagePath: pickedFile.path),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
