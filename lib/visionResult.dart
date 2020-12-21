@@ -7,19 +7,28 @@ import 'package:tflite/tflite.dart';
 import 'package:image/image.dart' as imgLib;
 import 'package:percent_indicator/percent_indicator.dart';
 
-// モデルの適用結果を映すウィジェット
+// モデルの推論結果を映すウィジェット
 // Scaffoldを持つページが作成される
 class ResultPage extends StatelessWidget {
   // cameraPreview.dartから受け取る値
   final String imagePath; // 撮影された画像のパス
-  const ResultPage({Key key, this.imagePath}) : super(key: key);
+  const ResultPage({Key key, this.imagePath}) : super(key: key); // コンストラクタ
 
   @override
   Widget build(BuildContext context) {
     final double deviceWidth = MediaQuery.of(context).size.width; // 端末の幅
     final double deviceHeight = MediaQuery.of(context).size.height; // 端末の高さ
     return Scaffold(
-      appBar: AppBar(title: Text('Result')),
+      appBar: AppBar(
+        iconTheme: IconThemeData(
+          color: Colors.black54,
+        ),
+        title: Text(
+          'Result',
+          style: TextStyle(color: Colors.black54),
+        ),
+        backgroundColor: Colors.white,
+      ),
       body: VisionResult(imgPath: imagePath),
     );
   }
@@ -27,8 +36,7 @@ class ResultPage extends StatelessWidget {
 
 // 結果表示部分のウィジェット
 class VisionResult extends StatefulWidget {
-  // 親ウィジェットから受け取る値
-  final String imgPath; // 画像パス
+  final String imgPath; // 画像パス : 親ウィジェットから受け取る
   VisionResult({this.imgPath});
 
   @override
@@ -63,50 +71,59 @@ class _VisionResultState extends State<VisionResult> {
         ),
         // 非同期でウィジェットを返す.　完了：結果のListView, 待機: テキスト
 
-        // テキスト
+        // インディケータの非同期ウィジェット
         FutureBuilder(
           future: predictImage(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              final result = decodeLabels(snapshot.data);
+              final result = decodeLabels(snapshot.data); // TfLiteの出力結果を簡略化
               return FittedBox(
+                // ラベルとインディケーター
                 child: Column(
                   children: [
+                    Text(
+                      'unripe',
+                    ),
                     LinearPercentIndicator(
                       width: MediaQuery.of(context).size.width - 50,
                       animation: true,
-                      lineHeight: 20.0,
-                      animationDuration: 2500,
+                      lineHeight: 30.0,
+                      animationDuration: 1500,
                       percent: result['unripe'],
                       center: Text(result['unripe'].toString()),
                       linearStrokeCap: LinearStrokeCap.roundAll,
                       progressColor: Colors.green,
                     ),
+                    Container(height: 10), // パディング用
+                    Text('ripe'),
                     LinearPercentIndicator(
                       width: MediaQuery.of(context).size.width - 50,
                       animation: true,
-                      lineHeight: 20.0,
-                      animationDuration: 2500,
+                      lineHeight: 30.0,
+                      animationDuration: 1500,
                       percent: result['ripe'],
                       center: Text(result['ripe'].toString()),
                       linearStrokeCap: LinearStrokeCap.roundAll,
-                      progressColor: Colors.blue,
+                      progressColor: Color(0xFF42421C),
                     ),
+                    Container(height: 10), // パディング用
+                    Text('overripe'),
                     LinearPercentIndicator(
                       width: MediaQuery.of(context).size.width - 50,
                       animation: true,
-                      lineHeight: 20.0,
-                      animationDuration: 2500,
+                      lineHeight: 30.0,
+                      animationDuration: 1500,
                       percent: result['overripe'],
                       center: Text(result['overripe'].toString()),
                       linearStrokeCap: LinearStrokeCap.roundAll,
-                      progressColor: Colors.red,
+                      progressColor: Color(0xFF261200),
                     ),
+                    Container(height: 10), // パディング用
                   ],
                 ),
               );
             } else {
-              return Text('読み込み中');
+              return Text('結果を取得中...');
             }
           },
         ),
