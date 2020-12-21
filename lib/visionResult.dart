@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:tflite/tflite.dart';
 import 'package:image/image.dart' as imgLib;
+import 'package:percent_indicator/percent_indicator.dart';
 
 // モデルの適用結果を映すウィジェット
 // Scaffoldを持つページが作成される
@@ -61,21 +62,51 @@ class _VisionResultState extends State<VisionResult> {
           imgLib.encodeJpg(_croppedImage),
         ),
         // 非同期でウィジェットを返す.　完了：結果のListView, 待機: テキスト
+
+        // テキスト
         FutureBuilder(
           future: predictImage(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              return ListView.builder(
-                shrinkWrap: true,
-                itemCount: snapshot.data.length,
-                itemBuilder: (context, index) {
-                  return Text(snapshot.data[index]["label"] +
-                      ':' +
-                      snapshot.data[index]["confidence"].toString());
-                },
+              final result = decodeLabels(snapshot.data);
+              return FittedBox(
+                child: Column(
+                  children: [
+                    LinearPercentIndicator(
+                      width: MediaQuery.of(context).size.width - 50,
+                      animation: true,
+                      lineHeight: 20.0,
+                      animationDuration: 2500,
+                      percent: result['unripe'],
+                      center: Text(result['unripe'].toString()),
+                      linearStrokeCap: LinearStrokeCap.roundAll,
+                      progressColor: Colors.green,
+                    ),
+                    LinearPercentIndicator(
+                      width: MediaQuery.of(context).size.width - 50,
+                      animation: true,
+                      lineHeight: 20.0,
+                      animationDuration: 2500,
+                      percent: result['ripe'],
+                      center: Text(result['ripe'].toString()),
+                      linearStrokeCap: LinearStrokeCap.roundAll,
+                      progressColor: Colors.blue,
+                    ),
+                    LinearPercentIndicator(
+                      width: MediaQuery.of(context).size.width - 50,
+                      animation: true,
+                      lineHeight: 20.0,
+                      animationDuration: 2500,
+                      percent: result['overripe'],
+                      center: Text(result['overripe'].toString()),
+                      linearStrokeCap: LinearStrokeCap.roundAll,
+                      progressColor: Colors.red,
+                    ),
+                  ],
+                ),
               );
             } else {
-              return Text("読み込み中？");
+              return Text('読み込み中');
             }
           },
         ),
@@ -140,5 +171,22 @@ class _VisionResultState extends State<VisionResult> {
     });
 
     return croppedImage;
+  }
+
+  // TfLiteの出力結果を単純なMapに変換
+  Map<String, dynamic> decodeLabels(dynamic outputs) {
+    // 結果格納用マップの定義
+    var result = {
+      'unripe': 0.0,
+      'ripe': 0.0,
+      'overripe': 0.0,
+    };
+    // TfLiteの分類結果をマップに格納
+    for (var internalMap in outputs) {
+      var map = Map<dynamic, dynamic>.from(internalMap);
+      result[map["label"]] = map["confidence"];
+    }
+
+    return result;
   }
 }
